@@ -1,4 +1,4 @@
 *.pyc
 /rtmbot.conf
-/plugins/**
 env
+log

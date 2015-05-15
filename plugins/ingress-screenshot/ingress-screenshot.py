@@ -21,6 +21,16 @@ def setup(given_bot):
         plugindir = "."
     slacktoken = given_bot.token
 
+def help(channel, username=None, error=None):
+    global slack, my_uid, users
+    print('ingress-screenshot: help()')
+    message = 'Usage: @%s screenshot IntelURL|address' % users[my_uid]['name']
+    if error:
+        message = 'ERROR: %s\n\n%s' % (error, message)
+    if username:
+        message = '@%s %s' % (username, message)
+    slack.api_call('chat.postMessage', channel=channel, text=message, as_user=True, link_names=True)
+
 def process_message(data):
     global slack, my_uid, users, plugindir, slacktoken
     
@@ -29,12 +39,23 @@ def process_message(data):
         return
     message = data['text']
     sender_uid = data['user']
+    if not sender_uid in users:
+        print('ingress-screenshot: could not find user with id %s' % str(sender_uid))
+        help(channel, message='Could not find user with id %s' % str(sender_uid))
+        return
+    username = users[sender_uid]['name']
+    channel = None
+    if 'channel' in data:
+        channel = data['channel']
+    elif 'group' in data:
+        channel = data['group']
     if message.startswith('<@%s> screenshot ' % my_uid) or \
             message.startswith('<@%s>: screenshot ' % my_uid):
         args = message.split(' ', 2)
         url = args[2]
-        if not sender_uid in users:
-            print('ingress-screenshot: could not find user with id %s' % str(sender_uid))
+        if url == '':
+            print('ingress-screenshot: no url/address given')
+            help(channel, message='No url/address given')
             return
         if not url.startswith('<http'):
             try:
@@ -85,16 +106,12 @@ def process_message(data):
                 requested_location = '_%s_ %s' % (loc.address, url)
             except Exception as e:
                 print('ingress-screenshot: error parsing location result for "%s": %s' % (url, e))
+                help(channel, username, 'Could not parse location search result for "%s": %s' % (url, e))
                 return
         else:
             url = url[1:-1]
             requested_location = url
-        username = users[sender_uid]['name']
-        channel = None
-        if 'channel' in data:
-            channel = data['channel']
-        elif 'group' in data:
-            channel = data['group']
+
         print('ingress-screenshot: Creating screenshot of %s on request of %s in channel %s' % (url, username, channel))
         tmpdir = tempfile.mkdtemp(prefix='ingress-screenshot-')
         screenshotfile = os.path.join(tmpdir, 'screenshot.png')
@@ -108,7 +125,9 @@ def process_message(data):
         print('ingress-screenshot: "'+'" "'.join(cmd)+'"')
         if subprocess.call(cmd) != 0:
             print('ingress-screenshot: failed to run phantomjs')
+            help(channel, username, 'Failed to run phantomjs, contact admin')
             return
+
         print('ingress-screenshot: sending screenshot to slack using slacker')
         try:
             slacker_client = slacker.Slacker(slacktoken)

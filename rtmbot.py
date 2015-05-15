@@ -59,7 +59,8 @@ class RtmBot(object):
                     if limiter == True:
                         time.sleep(.1)
                         limiter = False
-                    message = output[1].encode('ascii','ignore')
+                    message = output[1] #.encode('ascii','ignore')
+                    logging.info("Sending to channel %s: %s" % (output[0], message))
                     channel.send_message("{}".format(message))
                     limiter = True
     def crons(self):
@@ -73,22 +74,22 @@ class RtmBot(object):
             logging.info(plugin)
             name = plugin.split('/')[-1][:-3]
 #            try:
-            self.bot_plugins.append(Plugin(name))
+            self.bot_plugins.append(Plugin(name, self))
 #            except:
 #                print "error loading plugin %s" % name
 
 class Plugin(object):
-    def __init__(self, name, plugin_config={}):
+    def __init__(self, name, bot):
         self.name = name
         self.jobs = []
         self.module = __import__(name)
+        if 'setup' in dir(self.module):
+            self.module.setup(bot)
         self.register_jobs()
         self.outputs = []
         if name in config:
             logging.info("config found for: " + name)
             self.module.config = config[name]
-        if 'setup' in dir(self.module):
-            self.module.setup()
     def register_jobs(self):
         if 'crontable' in dir(self.module):
             for interval, function in self.module.crontable:
@@ -100,18 +101,18 @@ class Plugin(object):
     def do(self, function_name, data):
         if function_name in dir(self.module):
             #this makes the plugin fail with stack trace in debug mode
-            if not debug:
+            if True or not debug:
                 try:
                     eval("self.module."+function_name)(data)
-                except:
-                    dbg("problem in module {} {}".format(function_name, data))
+                except Exception as e:
+                    print("problem in module %s %s : %s" % (function_name, data, e))
             else:
                 eval("self.module."+function_name)(data)
         if "catch_all" in dir(self.module):
             try:
                 self.module.catch_all(data)
             except:
-                dbg("problem in catch all")
+                print("problem in catch all")
     def do_jobs(self):
         for job in self.jobs:
             job.check()
@@ -171,14 +172,14 @@ if __name__ == "__main__":
                                 directory
                                 ))
 
-    config = yaml.load(file('rtmbot.conf', 'r'))
+    config = yaml.load(open('rtmbot.conf', 'r'))
     debug = config["DEBUG"]
     bot = RtmBot(config["SLACK_TOKEN"])
     site_plugins = []
     files_currently_downloading = []
     job_hash = {}
 
-    if config.has_key("DAEMON"):
+    if "DAEMON" in config:
         if config["DAEMON"]:
             import daemon
             with daemon.DaemonContext():
