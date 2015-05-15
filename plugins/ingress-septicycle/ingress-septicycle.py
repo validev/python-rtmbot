@@ -67,6 +67,7 @@ def process_message(data):
         if len(args) > 3:
             try:
                 start = time.mktime(time.strptime(args[3], "%Y-%m-%d"))
+                startappend = ' starting at %s' % args[3]
             except Exception as e:
                 print('ingress-septicycle: could not parse start date: %s' % args[3])
                 help(channel, username, 'Could not parse start date: %s' % args[3])
@@ -85,11 +86,11 @@ def process_message(data):
             if cp == cycle_start+sec_per_cycle:
                 append = ' *Septicycle End*'
                 cycle_start = cp
-            if cp > start:
+            if cp >= start:
                 count = count+1
                 output = '%sCP: %s%s\n' % (output, str(datetime.datetime.fromtimestamp(cp))[:16], append)
             cp = cp+sec_per_checkpoint
-        message = '@%s these are the next %d checkpoints:\n%s' % (username, num_cps, output)
+        message = '@%s these are the next %d checkpoints%s:\n%s' % (username, num_cps, startappend, output)
 
         print('ingress-septicycle: sending results to slack')
         slack.api_call('chat.postMessage', channel=channel, text=message, as_user=True, link_names=True)
