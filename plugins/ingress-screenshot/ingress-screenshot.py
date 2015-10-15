@@ -50,13 +50,18 @@ def process_message(data):
     elif 'group' in data:
         channel = data['group']
     if message.startswith('<@%s> screenshot ' % my_uid) or \
-            message.startswith('<@%s>: screenshot ' % my_uid):
+            message.startswith('<@%s>: screenshot ' % my_uid) or \
+            message.startswith('<@%s> iitc ' % my_uid) or \
+            message.startswith('<@%s>: iitc ' % my_uid):
         args = message.split(' ', 2)
         url = args[2]
         if url == '':
             print('ingress-screenshot: no url/address given')
             help(channel, message='No url/address given')
             return
+        iitc = '0'
+        if args[1] == 'iitc':
+            iitc = '1'
         if not url.startswith('<http'):
             try:
                 geo = geopy.geocoders.GoogleV3()
@@ -115,12 +120,13 @@ def process_message(data):
         print('ingress-screenshot: Creating screenshot of %s on request of %s in channel %s' % (url, username, channel))
         tmpdir = tempfile.mkdtemp(prefix='ingress-screenshot-')
         screenshotfile = os.path.join(tmpdir, 'screenshot.png')
+        # 1 username password https://www.ingress.com/intel?ll=49.25544,7.041324&z=16 1 8 60 1920 1080 ./ 0 0 1
         cmd = [
             "phantomjs",
             os.path.join(plugindir, "ice.js"),
-            '', '', url, '1', '8', '5', '1920', '1080',
+            '1', '', '', url, '1', '8', '5', '1920', '1080',
             screenshotfile,
-            '1', '4'
+            '2', iitc, '1'
             ]
         print('ingress-screenshot: "'+'" "'.join(cmd)+'"')
         if subprocess.call(cmd) != 0:
