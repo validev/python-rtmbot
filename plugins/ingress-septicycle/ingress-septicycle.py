@@ -57,6 +57,7 @@ def process_message(data):
         num_cps = 1
         start = time.time()
         cmd = args[1]
+        startappend = ''
         if len(args) > 2:
             try:
                 num_cps = int(args[2])
