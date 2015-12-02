@@ -5,5 +5,5 @@ rm -rf `find /tmp/ingress-screenshot-* -mmin +10 -type d`
 rm -rf `find /tmp/irmbot-semaphore-* -mmin +30 -type d`
 python3 ./rtmbot.py
 sleep 30
-echo "Recycling bot ..." | mailx -s "Ingress Screenshotbot recycling" ilovemynexus4@gmail.com ilovemynexus4@gmail.com
+echo "Recycling bot ..."
 done
