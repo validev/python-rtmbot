@@ -27,10 +27,10 @@ def help(channel, username=None, error=None, manpage=False):
         message = 'Usage: @%s (m)iitc IntelURL|address' % users[my_uid]['name']
     else:
         message = 'Manpage @%s\n' % users[my_uid]['name']
-        message += 'IITC Screenshot: @%s (m|p)iitc IntelURL|address\n' % users[my_uid]['name']
-        message += 'IITC zooomed in: @%s (m|p)zoom IntelURL|address\n' % users[my_uid]['name']
+        message += 'IITC Screenshot: @%s (m)iitc IntelURL|address\n' % users[my_uid]['name']
+        message += 'IITC zooomed in: @%s (m)zoom IntelURL|address\n' % users[my_uid]['name']
         message += 'Stock Intel: @%s (m)intel|(m)screenshot IntelURL|address\n' % users[my_uid]['name']
-        message += 'High Def: @%s (m|p)8k IntelURL|address\n' % users[my_uid]['name']
+        message += 'High Def: @%s (m)8k IntelURL|address\n' % users[my_uid]['name']
         message += 'Regions: @%s europe|europa|asien|asia|world|welt\n' % users[my_uid]['name']
         message += 'Help: @%s help|hilfe|manpage\n' % users[my_uid]['name']
         message += '(m: for mobile devices)\n'
@@ -151,8 +151,7 @@ def process_message(data):
             command == 'zoom' or \
             command == 'mzoom' or \
             command == '8k' or \
-            command == 'm8k' or \
-            :
+            command == 'm8k' :
 
         # Typos
         if command == 'iitcm':
